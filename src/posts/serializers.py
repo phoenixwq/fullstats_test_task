@@ -11,24 +11,21 @@ class PostListSerializer(serializers.ModelSerializer):
     rating = serializers.FloatField(read_only=True, default=0)
     created = serializers.DateTimeField(read_only=True)
     visits = serializers.IntegerField(
-        source="get_visits_count",
         read_only=True
     )
     likes = serializers.IntegerField(
-        source="get_likes_count",
         read_only=True
     )
     dislikes = serializers.IntegerField(
-        source="get_dislikes_count",
         read_only=True
     )
-    visited = serializers.SerializerMethodField()
+    visited = serializers.SerializerMethodField(method_name="is_visited")
 
     class Meta:
         model = Post
         exclude = ["users_favorites", "users_marks", "users_visits", "content"]
 
-    def get_visited(self, obj) -> bool:
+    def is_visited(self, obj) -> bool:
         request = self.context.get("request")
         if request.user.is_authenticated:
             return Visit.objects.filter(post=obj, user=request.user).exists()

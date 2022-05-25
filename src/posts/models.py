@@ -39,14 +39,14 @@ class Post(models.Model):
         through="Favorite",
         related_name="favorites_posts"
     )
+    visits = models.PositiveIntegerField(default=0)
 
-    def get_visits_count(self):
-        return self.visit_set.count()
-
-    def get_likes_count(self):
+    @property
+    def likes(self):
         return self.mark_set.filter(value=1).count()
 
-    def get_dislikes_count(self):
+    @property
+    def dislikes(self):
         return self.mark_set.filter(value=-1).count()
 
 
