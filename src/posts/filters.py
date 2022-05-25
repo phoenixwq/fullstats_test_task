@@ -1,11 +1,13 @@
-from django_filters import rest_framework as filters
+from django_filters.rest_framework import FilterSet, BooleanFilter
+from rest_framework import filters
 from .models import Post
+from transliterate import translit
 
 
-class PostFilterSet(filters.FilterSet):
-    like = filters.BooleanFilter(method="get_liked")
-    favorite = filters.BooleanFilter(method="get_favorite")
-    mine = filters.BooleanFilter(method="get_mine")
+class PostFilterSet(FilterSet):
+    like = BooleanFilter(method="get_liked")
+    favorite = BooleanFilter(method="get_favorite")
+    mine = BooleanFilter(method="get_mine")
 
     def get_favorite(self, queryset, field_name, value):
         user = self.request.user
@@ -29,3 +31,11 @@ class PostFilterSet(filters.FilterSet):
         model = Post
         fields = ["favorite", "like", "mine"]
 
+
+class TranslitSearchFilter(filters.SearchFilter):
+    def get_search_terms(self, request):
+        params = request.query_params.get(self.search_param, '')
+        params = params.replace('\x00', '')
+        params = params.replace(',', ' ')
+        params = translit(params, "ru")
+        return params.split()

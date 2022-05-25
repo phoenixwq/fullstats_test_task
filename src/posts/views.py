@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets
-from .filters import PostFilterSet
+from .filters import PostFilterSet, TranslitSearchFilter
 from .models import Post
 from .pagination import PostPagination
 from django_filters.rest_framework import DjangoFilterBackend
@@ -16,9 +16,10 @@ UserModel = get_user_model()
 class PostView(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     pagination_class = PostPagination
-    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter, TranslitSearchFilter)
     filterset_class = PostFilterSet
     ordering_fields = ('created', 'visits', 'rating')
+    search_fields = ('title',)
 
     def get_serializer_class(self):
         if self.action == "list":
