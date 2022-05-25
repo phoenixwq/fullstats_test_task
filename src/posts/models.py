@@ -6,12 +6,18 @@ UserModel = get_user_model()
 
 
 class Post(models.Model):
-    article = models.PositiveIntegerField(db_index=True)
-    title = models.CharField(max_length=128, db_index=True)
+    article = models.PositiveIntegerField(
+        db_index=True,
+        unique=True
+    )
+    title = models.CharField(
+        max_length=128,
+        db_index=True
+    )
     overview = models.CharField(max_length=256)
     content = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
-    rating = models.FloatField()
+    rating = models.FloatField(default=0)
     author = models.ForeignKey(
         UserModel,
         on_delete=models.SET_NULL,
