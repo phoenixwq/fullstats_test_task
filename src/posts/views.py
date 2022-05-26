@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from posts.filters import PostFilterSet, TranslitSearchFilter
 from posts.pagination import PostPagination
 from django_filters.rest_framework import DjangoFilterBackend
+from posts.permissions import IsAuthor
 from posts.utils import save_post_visit
 from rest_framework.response import Response
 from posts.serializers import (
@@ -38,6 +39,7 @@ class PostView(viewsets.ModelViewSet):
     filterset_class = PostFilterSet
     ordering_fields = ('created', 'visits', 'rating')
     search_fields = ('title',)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly & IsAuthor,)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -62,7 +64,7 @@ class UserThroughPostBaseView(
 ):
     model = None
     serializer_class = None
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated & IsAuthor,)
 
     def retrieve(self, request, pk=None):
         post = generics.get_object_or_404(Post, pk=pk)
