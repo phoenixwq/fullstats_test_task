@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import (
+    MinValueValidator,
+    MaxValueValidator
+)
 
 UserModel = get_user_model()
 
@@ -50,7 +53,7 @@ class Post(models.Model):
         return self.mark_set.filter(value=-1).count()
 
 
-class UserPostBase(models.Model):
+class UserThroughPostBase(models.Model):
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE
@@ -67,7 +70,7 @@ class UserPostBase(models.Model):
         unique_together = ["post", "user"]
 
 
-class Mark(UserPostBase):
+class Mark(UserThroughPostBase):
     value = models.IntegerField(
         validators=[MinValueValidator(-1),
                     MaxValueValidator(1)],
@@ -75,11 +78,11 @@ class Mark(UserPostBase):
     )
 
 
-class Favorite(UserPostBase):
+class Favorite(UserThroughPostBase):
     pass
 
 
-class Visit(UserPostBase):
+class Visit(UserThroughPostBase):
     user = models.ForeignKey(
         UserModel,
         null=True,

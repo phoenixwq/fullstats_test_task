@@ -1,7 +1,10 @@
-from django_filters.rest_framework import FilterSet, BooleanFilter
 from rest_framework import filters
 from .models import Post
 from transliterate import translit
+from django_filters.rest_framework import (
+    FilterSet,
+    BooleanFilter
+)
 
 
 class PostFilterSet(FilterSet):
