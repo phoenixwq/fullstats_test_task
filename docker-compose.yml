@@ -7,7 +7,6 @@ services:
       - ./data/db:/var/lib/postgresql/data
     env_file:
       - ./.env
-
   web:
     build: ./src
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
@@ -17,10 +16,27 @@ services:
       - ./.env
     depends_on:
       - db
-
   nginx:
     build: ./nginx
     ports:
       - "1337:80"
     depends_on:
       - web
+  redis:
+    image: redis
+
+  celery-worker:
+    build: ./src
+    command: celery -A config worker -l INFO
+    depends_on:
+      - redis
+    env_file:
+      - ./.env
+
+  celery-beat:
+    build: ./src
+    command: celery -A config beat -l INFO
+    depends_on:
+      - redis
+    env_file:
+      - ./.env
