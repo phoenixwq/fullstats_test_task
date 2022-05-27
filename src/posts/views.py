@@ -1,10 +1,9 @@
 from django.contrib.auth import get_user_model
-from posts.filters import PostFilterSet, TranslitSearchFilter
+from posts.filters import PostFilterSet, TranslitSearchFilter, UserPostActionFilter
 from posts.pagination import PostPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from posts.permissions import IsAuthor
 from posts.utils import save_post_visit
-from rest_framework.response import Response
 from posts.serializers import (
     PostListSerializer,
     PostDetailSerializer,
@@ -12,10 +11,8 @@ from posts.serializers import (
     FavoriteSerializer,
 )
 from rest_framework import (
-    mixins,
     generics,
     permissions,
-    status,
     filters,
     viewsets
 )
@@ -58,40 +55,34 @@ class PostView(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
 
-class UserThroughPostBaseView(
-    mixins.CreateModelMixin,
-    viewsets.GenericViewSet
-):
+class UserPostActionView(viewsets.ModelViewSet):
     model = None
     serializer_class = None
     permission_classes = (permissions.IsAuthenticated & IsAuthor,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = UserPostActionFilter
 
-    def retrieve(self, request, pk=None):
-        post = generics.get_object_or_404(Post, pk=pk)
-        instance = generics.get_object_or_404(self.model, user=request.user, post=post)
-        serializer = self.get_serializer_class()(instance)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        post = self.get_post()
+        qs = self.model.objects.filter(post=post)
+        return qs
 
-    def update(self, request, pk):
-        post = generics.get_object_or_404(Post, pk=pk)
-        instance = generics.get_object_or_404(self.model, user=request.user, post=post)
-        serializer = self.get_serializer_class()(instance, data=request.data)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_object(self):
+        pk = self.kwargs.get("pk")
+        obj = generics.get_object_or_404(self.get_queryset(), pk=pk)
+        return obj
 
-    def destroy(self, request, pk):
-        post = generics.get_object_or_404(Post, pk=pk)
-        instance = generics.get_object_or_404(self.model, user=request.user, post=post)
-        serializer_data = self.get_serializer_class()(instance).data
-        instance.delete()
-        return Response(serializer_data, status=status.HTTP_200_OK)
+    def get_post(self):
+        post_pk = self.kwargs.get("post_pk")
+        post = generics.get_object_or_404(Post, pk=post_pk)
+        return post
 
 
-class MarkView(UserThroughPostBaseView):
+class MarkView(UserPostActionView):
     serializer_class = MarkSerializer
     model = Mark
 
 
-class FavoriteView(UserThroughPostBaseView):
+class FavoriteView(UserPostActionView):
     serializer_class = FavoriteSerializer
     model = Favorite
