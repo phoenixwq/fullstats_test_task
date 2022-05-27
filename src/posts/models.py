@@ -56,6 +56,7 @@ class Post(models.Model):
 class UserThroughPostBase(models.Model):
     post = models.ForeignKey(
         Post,
+        editable=False,
         on_delete=models.CASCADE
     )
     user = models.ForeignKey(
@@ -63,7 +64,10 @@ class UserThroughPostBase(models.Model):
         editable=False,
         on_delete=models.CASCADE
     )
-    created = models.DateTimeField(editable=False, auto_now_add=True)
+    created = models.DateTimeField(
+        editable=False,
+        auto_now_add=True
+    )
 
     class Meta:
         abstract = True
