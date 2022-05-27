@@ -7,7 +7,7 @@ from posts.models import (
     Mark,
     Favorite
 )
-
+from django.db.utils import IntegrityError
 
 UserModel = get_user_model()
 
@@ -44,18 +44,31 @@ class PostDetailSerializer(PostListSerializer):
 
 
 class UserThroughPostBaseSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(
-        queryset=UserModel.objects.all(),
-        default=serializers.CurrentUserDefault(),
-        required=False,
-        write_only=True
-    )
+    user = UserSerializer(read_only=True)
     post = serializers.PrimaryKeyRelatedField(
         queryset=Post.objects.all(),
         required=False,
         write_only=True,
     )
     created = serializers.DateTimeField(read_only=True)
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        validated_data['user'] = request.user
+        try:
+            instance = self.Meta.model.objects.create(**validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError("unique constraint post and user")
+        return instance
+
+    def update(self, instance, validated_data):
+        post = validated_data.get("post")
+        if instance.post != post:
+            raise serializers.ValidationError("Can't change post!")
+        return super(UserThroughPostBaseSerializer, self).update(instance, validated_data)
+
+    class Meta:
+        model = None
 
 
 class MarkSerializer(UserThroughPostBaseSerializer):
