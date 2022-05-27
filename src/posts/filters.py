@@ -35,6 +35,19 @@ class PostFilterSet(FilterSet):
         fields = ["favorite", "like", "mine"]
 
 
+class UserPostActionFilter(FilterSet):
+    user = BooleanFilter(method="get_users")
+
+    def get_users(self, queryset, field_name, value):
+        user = self.request.user
+        if value and user.is_authenticated:
+            return queryset.filter(user=user)
+        return queryset
+
+    class Meta:
+        fields = ["user"]
+
+
 class TranslitSearchFilter(filters.SearchFilter):
     def get_search_terms(self, request):
         params = request.query_params.get(self.search_param, '')
